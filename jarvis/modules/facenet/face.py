@@ -52,9 +52,7 @@ def condition_check(filename: Union[str, FilePath]) -> bool:
         return False
     if os.path.split(filename)[-1].startswith('.'):
         return False
-    if not verify_image(filename):
-        return False
-    return True
+    return bool(verify_image(filename))
 
 
 class FaceNet:
@@ -133,7 +131,7 @@ class FaceNet:
             bool:
             A boolean value if not a face was detected.
         """
-        cv2_cascades = cv2_data.haarcascades + "haarcascade_frontalface_default.xml"
+        cv2_cascades = f"{cv2_data.haarcascades}haarcascade_frontalface_default.xml"
         if not os.path.isfile(cv2_cascades):
             return False
         cascade = cv2.CascadeClassifier(cv2_cascades)

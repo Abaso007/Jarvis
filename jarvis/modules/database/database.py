@@ -29,7 +29,7 @@ class Database:
             timeout: Timeout for the connection to database.
         """
         if not database.endswith('.db'):
-            database = database + '.db'
+            database = f'{database}.db'
         self.connection = sqlite3.connect(database=database, check_same_thread=False, timeout=timeout)
 
     def create_table(self, table_name: str, columns: Union[List[str], Tuple[str]]) -> NoReturn:

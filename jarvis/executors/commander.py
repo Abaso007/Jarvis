@@ -154,11 +154,10 @@ def initiator(phrase: str = None, should_return: bool = False) -> None:
             return
         speaker.speak(text=random.choice(conversation.wake_up2))
         initialize()
+    elif phrase:
+        split_phrase(phrase=phrase, should_return=should_return)
+    elif listener_controls.get_listener_state():
+        speaker.speak(text=random.choice(conversation.wake_up3))
+        initialize()
     else:
-        if phrase:
-            split_phrase(phrase=phrase, should_return=should_return)
-        elif listener_controls.get_listener_state():
-            speaker.speak(text=random.choice(conversation.wake_up3))
-            initialize()
-        else:
-            speaker.speak(text=inactive_msg)
+        speaker.speak(text=inactive_msg)

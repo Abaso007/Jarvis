@@ -45,7 +45,7 @@ def get_todo() -> None:
         if category not in result:
             result[category] = item  # creates dict for category and item if category is not found in result
         else:
-            result[category] = result[category] + ', ' + item  # updates category if already found in result
+            result[category] = f'{result[category]}, {item}'
     if result:
         if shared.called_by_offline:
             speaker.speak(text=json.dumps(result))
@@ -56,9 +56,7 @@ def get_todo() -> None:
             speaker.speak(text=response)
     elif shared.called['report'] and not shared.called['time_travel']:
         speaker.speak(text=f"You don't have any tasks in your to-do list {models.env.title}.")
-    elif shared.called['time_travel']:
-        pass
-    else:
+    elif not shared.called['time_travel']:
         speaker.speak(text=f"You don't have any tasks in your to-do list {models.env.title}.")
 
     if shared.called['report'] or shared.called['time_travel']:

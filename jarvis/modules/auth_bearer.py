@@ -38,5 +38,5 @@ class BearerAuth(AuthBase):
             PreparedRequest:
             Returns the request after adding the auth header.
         """
-        request.headers["authorization"] = "Bearer " + self.token
+        request.headers["authorization"] = f"Bearer {self.token}"
         return request

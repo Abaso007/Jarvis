@@ -105,10 +105,9 @@ def distance(phrase) -> NoReturn:
             try:
                 next_word = check[check.index(word) + 1]  # looks if words after an uppercase word is also one
                 if next_word[0].isupper():
-                    places.append(f"{word + ' ' + check[check.index(word) + 1]}")
-                else:
-                    if word not in " ".join(places):
-                        places.append(word)
+                    places.append(f"{f'{word} {check[check.index(word) + 1]}'}")
+                elif word not in " ".join(places):
+                    places.append(word)
             except IndexError:  # catches exception on lowercase word after an upper case word
                 if word not in " ".join(places):
                     places.append(word)
@@ -156,8 +155,7 @@ def distance_controller(origin: str = None, destination: str = None) -> None:
         current_location = files.get_location()
         start = (current_location["latitude"], current_location["longitude"])
         start_check = "My Location"
-    desired_location = geo_locator.geocode(destination)
-    if desired_location:
+    if desired_location := geo_locator.geocode(destination):
         end = desired_location.latitude, desired_location.longitude
     else:
         end = destination[0], destination[1]
@@ -210,10 +208,10 @@ def locate_places(phrase: str = None) -> None:
                 or "Xzibit" in converted:
             return
         place = support.get_capitalized(phrase=converted)
-        if not place:
-            keyword = "is"
-            before_keyword, keyword, after_keyword = converted.partition(keyword)
-            place = after_keyword.replace(" in", "").strip()
+    if not place:
+        keyword = "is"
+        before_keyword, keyword, after_keyword = converted.partition(keyword)
+        place = after_keyword.replace(" in", "").strip()
 
     if not (current_location := files.get_location()):
         current_location = {"address": {"country": "United States"}}

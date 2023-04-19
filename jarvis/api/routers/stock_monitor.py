@@ -106,8 +106,9 @@ async def stock_monitor_api(request: Request, input_data: StockMonitorModal,
         - This API endpoint is simply the backend for stock price monitoring.
         - This function validates the user information and stores it to a database.
     """
-    logger.debug("Connection received from %s via %s using %s" %
-                 (request.client.host, request.headers.get('host'), request.headers.get('user-agent')))
+    logger.debug(
+        f"Connection received from {request.client.host} via {request.headers.get('host')} using {request.headers.get('user-agent')}"
+    )
 
     input_data.request = input_data.request.upper()
     if input_data.request not in ("GET", "PUT", "DELETE"):
@@ -124,8 +125,7 @@ async def stock_monitor_api(request: Request, input_data: StockMonitorModal,
     else:  # If any one is missing trigger OTP
         sent_dict = stock_monitor_helper.otp_sent
         recd_dict = stock_monitor_helper.otp_recd
-        email_otp = email_otp or request.headers.get('email_otp')
-        if email_otp:
+        if email_otp := email_otp or request.headers.get('email_otp'):
             recd_dict[input_data.email] = email_otp
         if recd_dict.get(input_data.email, 'DO_NOT') == sent_dict.get(input_data.email, 'MATCH'):
             logger.info("%s has been verified.", input_data.email)
@@ -159,7 +159,7 @@ async def stock_monitor_api(request: Request, input_data: StockMonitorModal,
                 row = f'<tr><td align="center"><input value="{ind}" id="radio_{ind}" type="radio" name="read"></td><td>'
                 row += "</td><td>".join(str(i) for i in each_entry) + "</td>"
                 rows += row
-            html_data += rows + "</tr></tbody></table>"
+            html_data += f"{rows}</tr></tbody></table>"
             raise APIResponse(status_code=HTTPStatus.OK.real, detail=html_data)
         raise APIResponse(status_code=HTTPStatus.UNPROCESSABLE_ENTITY.real,
                           detail=f"No entry found in database for {input_data.email!r}")

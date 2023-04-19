@@ -157,8 +157,9 @@ def meetings(phrase: str) -> None:
     if meeting_status and meeting_status[1] == datetime.datetime.now().strftime('%Y_%m_%d'):
         speaker.speak(text=meeting_status[0])
     elif meeting_status:
-        logger.warning("Date in meeting status (%s) does not match the current date (%s)" %
-                       (meeting_status[1], datetime.datetime.now().strftime('%Y_%m_%d')))
+        logger.warning(
+            f"Date in meeting status ({meeting_status[1]}) does not match the current date ({datetime.datetime.now().strftime('%Y_%m_%d')})"
+        )
         logger.info("Starting adhoc process to update ics table.")
         Process(target=meetings_writer).start()
         speaker.speak(text=f"Meetings table is outdated {models.env.title}. Please try again in a minute or two.")

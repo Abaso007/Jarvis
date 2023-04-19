@@ -75,21 +75,20 @@ class Operations:
             target_temp = 83
         elif "low" in phrase or "lowest" in phrase:
             target_temp = 57
-        else:
-            if vehicle_position := vehicle(operation="LOCATE_INTERNAL"):
-                current_temp, target_temp = current_set_temperature(latitude=vehicle_position['latitude'],
-                                                                    longitude=vehicle_position['longitude'])
-                extras += f"Your car is in {vehicle_position['city']} {vehicle_position['state']}, where the " \
+        elif vehicle_position := vehicle(operation="LOCATE_INTERNAL"):
+            current_temp, target_temp = current_set_temperature(latitude=vehicle_position['latitude'],
+                                                                longitude=vehicle_position['longitude'])
+            extras += f"Your car is in {vehicle_position['city']} {vehicle_position['state']}, where the " \
                           f"current temperature is {current_temp}, so "
-            else:
-                host_location = files.get_location()
-                if host_location['latitude'] and host_location['longitude']:
-                    current_temp, target_temp = current_set_temperature(latitude=host_location['latitude'],
-                                                                        longitude=host_location['longitude'])
-                    extras += f"The current temperature in " \
+        else:
+            host_location = files.get_location()
+            if host_location['latitude'] and host_location['longitude']:
+                current_temp, target_temp = current_set_temperature(latitude=host_location['latitude'],
+                                                                    longitude=host_location['longitude'])
+                extras += f"The current temperature in " \
                               f"{host_location.get('address', {}).get('city', 'unknown city')} is {current_temp}, so "
-                else:
-                    target_temp = 69
+            else:
+                target_temp = 69
         extras += f"I've configured the climate setting to {target_temp}\N{DEGREE SIGN}F"
         opr = "START-LOCK" if 'lock' in phrase else "START"
         if car_name := self.object(operation=opr, temp=target_temp - 26):
@@ -156,15 +155,14 @@ class Operations:
             str:
             Response after unlocking the vehicle.
         """
-        if car_name := self.object(operation="UNLOCK"):
-            if dt_string and shared.called_by_offline:
-                communicator.send_email(body=f"Your {car_name} was successfully unlocked via offline communicator!",
-                                        recipient=models.env.recipient, subject=f"Car unlock alert: {dt_string}",
-                                        title="Vehicle Protection",
-                                        gmail_user=models.env.open_gmail_user, gmail_pass=models.env.open_gmail_pass)
-            return f"Your {car_name} has been unlocked {models.env.title}!"
-        else:
+        if not (car_name := self.object(operation="UNLOCK")):
             return self.disconnect
+        if dt_string and shared.called_by_offline:
+            communicator.send_email(body=f"Your {car_name} was successfully unlocked via offline communicator!",
+                                    recipient=models.env.recipient, subject=f"Car unlock alert: {dt_string}",
+                                    title="Vehicle Protection",
+                                    gmail_user=models.env.open_gmail_user, gmail_pass=models.env.open_gmail_pass)
+        return f"Your {car_name} has been unlocked {models.env.title}!"
 
     def honk(self) -> str:
         """Calls vehicle function to honk the car.
@@ -380,7 +378,7 @@ def vehicle(operation: str, temp: int = None, end_time: int = None, retry: bool 
             response = control.lock(pin=models.env.car_pin)
         elif operation == "UNLOCK":
             response = control.unlock(pin=models.env.car_pin)
-        elif operation == "START" or operation == "START-LOCK":
+        elif operation in {"START", "START-LOCK"}:
             if operation == "START-LOCK":
                 lock_status = {each_dict['key']: each_dict['value'] for each_dict in
                                [key for key in control.get_status().get('vehicleStatus').get('coreStatus')
@@ -412,7 +410,7 @@ def vehicle(operation: str, temp: int = None, end_time: int = None, retry: bool 
             return f"Guardian mode is already enabled until {until} {util.get_timezone()} {models.env.title}!"
         elif operation == "HONK":
             response = control.honk_blink()
-        elif operation == "LOCATE" or operation == "LOCATE_INTERNAL":
+        elif operation in {"LOCATE", "LOCATE_INTERNAL"}:
             if not (position := control.get_position().get('position')):
                 logger.error("Unable to get position of the vehicle.")
                 return

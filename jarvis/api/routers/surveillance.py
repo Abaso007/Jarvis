@@ -121,15 +121,14 @@ if not os.getcwd().endswith("Jarvis") or models.env.surveillance_endpoint_auth:
         if not token:
             raise APIResponse(status_code=HTTPStatus.UNAUTHORIZED.real,
                               detail=HTTPStatus.UNAUTHORIZED.__dict__['phrase'])
-        if secrets.compare_digest(token, surveillance.token):
-            surveillance.client_id = int(''.join(str(time.time()).split('.')))  # include milliseconds to avoid dupes
-            rendered = jinja2.Template(templates.origin.surveillance).render(CLIENT_ID=surveillance.client_id)
-            content_type, _ = mimetypes.guess_type(rendered)
-            return HTMLResponse(status_code=HTTPStatus.TEMPORARY_REDIRECT.real,
-                                content=rendered, media_type=content_type)
-        else:
+        if not secrets.compare_digest(token, surveillance.token):
             raise APIResponse(status_code=HTTPStatus.EXPECTATION_FAILED.real,
                               detail='Requires authentication since endpoint uses single-use token.')
+        surveillance.client_id = int(''.join(str(time.time()).split('.')))  # include milliseconds to avoid dupes
+        rendered = jinja2.Template(templates.origin.surveillance).render(CLIENT_ID=surveillance.client_id)
+        content_type, _ = mimetypes.guess_type(rendered)
+        return HTMLResponse(status_code=HTTPStatus.TEMPORARY_REDIRECT.real,
+                            content=rendered, media_type=content_type)
 
 # Conditional endpoint: Condition matches without env vars during docs generation
 if not os.getcwd().endswith("Jarvis") or models.env.surveillance_endpoint_auth:
@@ -154,8 +153,9 @@ if not os.getcwd().endswith("Jarvis") or models.env.surveillance_endpoint_auth:
             StreamingResponse:
             StreamingResponse with a collective of each frame.
         """
-        logger.debug("Connection received from %s via %s using %s" %
-                     (request.client.host, request.headers.get('host'), request.headers.get('user-agent')))
+        logger.debug(
+            f"Connection received from {request.client.host} via {request.headers.get('host')} using {request.headers.get('user-agent')}"
+        )
 
         if not token:
             logger.warning('/video-feed was accessed directly.')
@@ -227,7 +227,7 @@ if not os.getcwd().endswith("Jarvis") or models.env.surveillance_endpoint_auth:
                                daemon=True).start()
                         raise WebSocketDisconnect  # Raise error to release camera after a failed read
                 if surveillance.session_manager.get(client_id, time.time()) + \
-                        models.env.surveillance_session_timeout <= time.time():
+                            models.env.surveillance_session_timeout <= time.time():
                     logger.info("Sending session timeout to client: %d", client_id)
                     bytes_, tmp_file = surveillance_squire.generate_error_frame(
                         dimension=surveillance.frame,
@@ -239,7 +239,7 @@ if not os.getcwd().endswith("Jarvis") or models.env.surveillance_endpoint_auth:
             ws_manager.disconnect(websocket)
             logger.info("Client [%d] disconnected.", client_id)
             if ws_manager.active_connections:
-                if process := surveillance.processes.get(int(client_id)):
+                if process := surveillance.processes.get(client_id):
                     support.stop_process(pid=process.pid)
             else:
                 logger.info("No active connections found.")

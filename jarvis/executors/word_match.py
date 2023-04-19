@@ -11,7 +11,7 @@ from typing import List, NoReturn, Tuple, Union
 def reverse_lookup(lookup: str,
                    match_list: Union[List, Tuple]) -> Union[str, NoReturn]:
     """Returns the word in phrase that matches the one in given list."""
-    reverse = sum([w.lower().split() for w in match_list], [])  # extract multi worded conditions in match list
+    reverse = sum((w.lower().split() for w in match_list), [])
     for word in lookup.split():  # loop through words in the phrase
         if word in reverse:  # check at least one word in phrase matches the multi worded condition
             return word

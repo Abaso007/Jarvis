@@ -68,7 +68,7 @@ def exit_process() -> NoReturn:
     if reminder_files := support.lock_files(reminder_files=True):
         for file in reminder_files:
             split_val = file.replace('.lock', '').split('|')
-            reminders.update({split_val[0]: split_val[-1]})
+            reminders[split_val[0]] = split_val[-1]
     if reminders:
         logger.info("JARVIS::Deleting Reminders - %s", reminders)
         if len(reminders) == 1:
@@ -251,10 +251,11 @@ def delete_logs() -> NoReturn:
 def delete_pycache() -> NoReturn:
     """Deletes ``__pycache__`` folder from all sub-dir."""
     for __path, __directory, __file in os.walk(os.getcwd()):
-        if '__pycache__' in __directory:
-            if os.path.exists(os.path.join(__path, '__pycache__')):
-                logger.debug("Deleting pycache: %s", os.path.join(__path, '__pycache__'))
-                shutil.rmtree(os.path.join(__path, '__pycache__'))
+        if '__pycache__' in __directory and os.path.exists(
+            os.path.join(__path, '__pycache__')
+        ):
+            logger.debug("Deleting pycache: %s", os.path.join(__path, '__pycache__'))
+            shutil.rmtree(os.path.join(__path, '__pycache__'))
 
 
 def set_executable() -> NoReturn:

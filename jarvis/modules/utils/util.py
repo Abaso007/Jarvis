@@ -59,9 +59,7 @@ def part_of_day() -> str:
         return "Morning"
     if 12 <= current_hour <= 15:
         return "Afternoon"
-    if 16 <= current_hour <= 19:
-        return "Evening"
-    return "Night"
+    return "Evening" if 16 <= current_hour <= 19 else "Night"
 
 
 def get_closest_match(text: str, match_list: list) -> str:
@@ -229,12 +227,7 @@ def delay_calculator(phrase: str) -> Union[int, float]:
     """
     if not (count := extract_nos(input_=phrase)):
         count = 1
-    if 'hour' in phrase:
-        delay = 3_600
-    elif 'minute' in phrase:
-        delay = 60
-    else:  # Default to # as seconds
-        delay = 60
+    delay = 3_600 if 'hour' in phrase else 60
     return count * delay
 
 

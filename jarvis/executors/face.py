@@ -48,8 +48,12 @@ def faces(phrase: str) -> None:
         if FaceNet().face_detection(retry_count=5):
             detected_face()
     else:
-        if os.path.isdir(TRAINING_DIR) and \
-                set(os.path.dirname(p) for p in glob.glob(os.path.join(TRAINING_DIR, "*", ""), recursive=True)):
+        if os.path.isdir(TRAINING_DIR) and {
+            os.path.dirname(p)
+            for p in glob.glob(
+                os.path.join(TRAINING_DIR, "*", ""), recursive=True
+            )
+        }:
             speaker.speak(text='Initializing facial recognition. Please smile at the camera for me.', run=True)
             util.write_screen(text='Looking for faces to recognize.')
             try:
@@ -65,7 +69,7 @@ def faces(phrase: str) -> None:
                 return
             speaker.speak(text="No faces were recognized. Switching to face detection.", run=True)
         else:
-            os.mkdir(TRAINING_DIR) if not os.path.isdir(TRAINING_DIR) else None
+            None if os.path.isdir(TRAINING_DIR) else os.mkdir(TRAINING_DIR)
             speaker.speak(text=f"No named training modules were found {models.env.title}. Switching to face detection",
                           run=True)
         if FaceNet().face_detection(filename=FACE_DETECTION_TEMP_FILE):

@@ -151,15 +151,13 @@ class MagicHomeApi:
                 message = [0x31, 0x00, 0x00, 0x00,
                            check_number_range(warm_white),
                            0x0f, 0x0f]
-                self.send_bytes(*(message + [calculate_checksum(message)]))
             else:
                 message = [0x31,
                            check_number_range(r),
                            check_number_range(g),
                            check_number_range(b),
                            0x00, 0xf0, 0x0f]
-                self.send_bytes(*(message + [calculate_checksum(message)]))
-
+            self.send_bytes(*(message + [calculate_checksum(message)]))
         elif self.device_type == 4:
             # Update the white, or color, of a legacy bulb
             if warm_white:
@@ -168,14 +166,13 @@ class MagicHomeApi:
                            0x0f, 0xaa, 0x56, 0x00, 0x00, 0x00,
                            check_number_range(warm_white),
                            0x0f, 0xaa]
-                self.send_bytes(*(message + [calculate_checksum(message)]))
             else:
                 message = [0x56,
                            check_number_range(r),
                            check_number_range(g),
                            check_number_range(b),
                            0x00, 0xf0, 0xaa]
-                self.send_bytes(*(message + [calculate_checksum(message)]))
+            self.send_bytes(*(message + [calculate_checksum(message)]))
         else:
             util.write_screen(text="Incompatible device type received.")
 
@@ -189,15 +186,10 @@ class MagicHomeApi:
         See Also:
             Presets can range from 0x25 (int 37) to 0x38 (int 56)
         """
-        if preset_number < 37:
-            preset_number = 37
-        if preset_number > 56:
-            preset_number = 56
-        if speed < 0:
-            speed = 0
-        if speed > 100:
-            speed = 100
-
+        preset_number = max(preset_number, 37)
+        preset_number = min(preset_number, 56)
+        speed = max(speed, 0)
+        speed = min(speed, 100)
         if self.device_type == 4:
             self.send_bytes(0xBB, preset_number, speed, 0x44)
         else:

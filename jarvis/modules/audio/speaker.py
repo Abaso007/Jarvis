@@ -45,7 +45,7 @@ def speech_synthesizer(text: str,
             logger.info("Converted %s -> %s", t_12, t_24)
             text = text.replace(t_12, t_24)
     if 'IP' in text.split():
-        ip_new = '-'.join([i for i in text.split(' ')[-1]]).replace('-.-', ', ')  # 192.168.1.1 -> 1-9-2, 1-6-8, 1, 1
+        ip_new = '-'.join(list(text.split(' ')[-1])).replace('-.-', ', ')
         text = text.replace(text.split(' ')[-1], ip_new).replace(' IP ', ' I.P. ')
     # Raises UnicodeDecodeError within docker container
     text = text.replace("\N{DEGREE SIGN}F", " degrees fahrenheit")
@@ -116,7 +116,7 @@ def frequently_used(function_name: str) -> NoReturn:
     """
     data = files.get_frequent(func=function_name)
     try:
-        data = {k: v for k, v in sorted(data.items(), key=lambda x: x[1], reverse=True)}
+        data = dict(sorted(data.items(), key=lambda x: x[1], reverse=True))
     except Exception as error:  # Commonly raises key error or type error but don't care, log it and remove the file
         logger.error(error)
         logger.warning(data)

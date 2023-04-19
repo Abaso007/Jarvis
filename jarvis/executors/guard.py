@@ -52,11 +52,8 @@ def put_state(state: bool) -> NoReturn:
     """
     with db.connection:
         cursor = db.connection.cursor()
-        if state is True:
-            if shared.called_by_offline:
-                trigger = "GUARD_OFFLINE"
-            else:
-                trigger = "GUARD_VOICE"
+        if state:
+            trigger = "GUARD_OFFLINE" if shared.called_by_offline else "GUARD_VOICE"
             logger.info("Enabling security mode.")
             cursor.execute("INSERT or REPLACE INTO guard (state, trigger) VALUES (?,?);", (1, trigger))
         else:
@@ -116,11 +113,10 @@ def guard_disable() -> NoReturn:
                 Timer(interval=3, function=politely_disable).start()
             else:
                 stop_and_respond(stop=True)
+    elif TRACE["status"]:
+        TRACE["status"] = False
     else:
-        if TRACE["status"]:
-            TRACE["status"] = False
-        else:
-            speaker.speak(text=f"Security mode was never enabled {models.env.title}!")
+        speaker.speak(text=f"Security mode was never enabled {models.env.title}!")
 
 
 def security_runner(offline: bool = True) -> NoReturn:

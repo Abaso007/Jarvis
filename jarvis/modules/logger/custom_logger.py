@@ -87,8 +87,11 @@ class TestLogger:
         logging.Formatter.converter = self.custom_time
         self.logger.error(sys._getframe(0).f_code.co_name)
         called_func = sys._getframe(1).f_code.co_name.replace("<module>", __name__)
-        parent_func = sys._getframe(2).f_code.co_name.replace("<module>", __name__) if not called_func == '__main__' \
+        parent_func = (
+            sys._getframe(2).f_code.co_name.replace("<module>", __name__)
+            if called_func != '__main__'
             else None
+        )
         self.logger.info("I was called by %s which was called by %s", called_func, parent_func)
         self.logger.info("I'm a special function as I use custom timezone, overriding logging.formatTime() method.")
 

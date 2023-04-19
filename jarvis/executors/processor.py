@@ -170,7 +170,7 @@ def stop_child_processes() -> NoReturn:
 
 def stop_processes(func_name: str = None) -> NoReturn:
     """Stops all background processes initiated during startup and removes database source file."""
-    stop_child_processes() if not func_name else None
+    None if func_name else stop_child_processes()
     for func, process in shared.processes.items():
         if func_name and func_name != func:
             continue

@@ -86,7 +86,9 @@ class ThreadExecutor:
         for future in as_completed(futures):
             if future.exception():
                 thread_except += 1
-                logger.error("Thread processing for '%s' received an exception: %s" % (iterator, future.exception()))
+                logger.error(
+                    f"Thread processing for '{iterator}' received an exception: {future.exception()}"
+                )
         return thread_except
 
     def avail_check(self, function_to_call: Callable) -> NoReturn:
@@ -160,7 +162,9 @@ def lights(phrase: str) -> Union[None, NoReturn]:
     host_names = util.matrix_to_flat_list(input_=host_names)
     host_names = list(filter(None, host_names))  # remove None values
     if light_location and not host_names:
-        logger.warning("No hostname values found for %s in %s" % (light_location, models.fileio.smart_devices))
+        logger.warning(
+            f"No hostname values found for {light_location} in {models.fileio.smart_devices}"
+        )
         speaker.speak(text=f"I'm sorry {models.env.title}! You haven't mentioned the host names of {light_location!r} "
                            "lights.")
         return
@@ -196,11 +200,9 @@ def lights(phrase: str) -> Union[None, NoReturn]:
         speaker.speak(text=f'{random.choice(conversation.acknowledgement)}! Turning off {len(host_ip)} {plural}')
         if state := lights_squire.check_status():
             support.stop_process(pid=int(state[0]))
-        if 'just' in phrase or 'simply' in phrase:
-            executor.avail_check(function_to_call=turn_off)
-        else:
+        if 'just' not in phrase and 'simply' not in phrase:
             Thread(target=executor.thread_worker, args=[cool]).run()
-            executor.avail_check(function_to_call=turn_off)
+        executor.avail_check(function_to_call=turn_off)
     elif 'party mode' in phrase:
         if lights_squire.party_mode(host_ip=host_ip, phrase=phrase):
             Thread(target=executor.thread_worker, args=[cool]).run()

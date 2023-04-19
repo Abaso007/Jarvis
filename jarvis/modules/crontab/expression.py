@@ -94,13 +94,13 @@ class CronExpression:
 
     def __str__(self):
         """Built-in override."""
-        base = self.__class__.__name__ + "(%s)"
+        base = f"{self.__class__.__name__}(%s)"
         cron_line = self.string_tab + [str(self.comment)]
         if not self.comment:
             cron_line.pop()
         arguments = '"' + ' '.join(cron_line) + '"'
         if self.epoch != self.DEFAULT_EPOCH:
-            return base % (arguments + ", epoch=" + repr(self.epoch))
+            return base % f"{arguments}, epoch={repr(self.epoch)}"
         else:
             return base % arguments
 
@@ -308,11 +308,10 @@ def parse_atom(parse: str, minmax: tuple) -> set:
         if prefix < suffix:
             # Example: 7-10
             return set(range(prefix, suffix + 1, increment))
-        else:
-            # Example: 12-4/2; (12, 12 + n, ..., 12 + m*n) U (n_0, ..., 4)
-            noskips = list(range(prefix, minmax[1] + 1))
-            noskips += list(range(minmax[0], suffix + 1))
-            return set(noskips[::increment])
+        # Example: 12-4/2; (12, 12 + n, ..., 12 + m*n) U (n_0, ..., 4)
+        noskips = list(range(prefix, minmax[1] + 1))
+        noskips += list(range(minmax[0], suffix + 1))
+        return set(noskips[::increment])
 
 
 if __name__ == '__main__':

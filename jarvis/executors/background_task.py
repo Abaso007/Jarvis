@@ -86,36 +86,37 @@ def validate_tasks(log: bool = True) -> Generator[BackgroundTask]:
         BackgroundTask:
         BackgroundTask object.
     """
-    if os.path.isfile(models.fileio.background_tasks):
-        task_info = []
-        with open(models.fileio.background_tasks) as file:
-            try:
-                task_info = yaml.load(stream=file, Loader=yaml.FullLoader) or []
-            except yaml.YAMLError as error:
-                logger.error(error)
-                warnings.warn(
-                    "BACKGROUND TASKS :: Invalid file format."
-                )
-                logger.error("Invalid file format. Logging background tasks and renaming the file to avoid repeated "
-                             "errors in a loop.\n%s\n\n%s\n\n%s" %
-                             (''.join(['*' for _ in range(120)]), file.read(), ''.join(['*' for _ in range(120)])))
-                os.rename(src=models.fileio.background_tasks, dst=models.fileio.tmp_background_tasks)
-        if task_info:
-            logger.info("Background tasks: %d", len(task_info)) if log else None
+    if not os.path.isfile(models.fileio.background_tasks):
+        return
+    task_info = []
+    with open(models.fileio.background_tasks) as file:
+        try:
+            task_info = yaml.load(stream=file, Loader=yaml.FullLoader) or []
+        except yaml.YAMLError as error:
+            logger.error(error)
+            warnings.warn(
+                "BACKGROUND TASKS :: Invalid file format."
+            )
+            logger.error("Invalid file format. Logging background tasks and renaming the file to avoid repeated "
+                         "errors in a loop.\n%s\n\n%s\n\n%s" %
+                         (''.join(['*' for _ in range(120)]), file.read(), ''.join(['*' for _ in range(120)])))
+            os.rename(src=models.fileio.background_tasks, dst=models.fileio.tmp_background_tasks)
+    if task_info:
+        logger.info("Background tasks: %d", len(task_info)) if log else None
+    else:
+        return
+    for t in task_info:
+        try:
+            task = BackgroundTask(seconds=t.get('seconds'), task=t.get('task'), ignore_hours=t.get('ignore_hours'))
+        except ValidationError as error:
+            logger.error(error)
+            remove_corrupted(t)
+            continue
+        if word_match.word_match(phrase=task.task, match_list=compatibles.offline_compatible()):
+            if log:
+                logger.info("'%s' will be executed every %s",
+                            task.task, support.time_converter(second=task.seconds))
+            yield task
         else:
-            return
-        for t in task_info:
-            try:
-                task = BackgroundTask(seconds=t.get('seconds'), task=t.get('task'), ignore_hours=t.get('ignore_hours'))
-            except ValidationError as error:
-                logger.error(error)
-                remove_corrupted(t)
-                continue
-            if word_match.word_match(phrase=task.task, match_list=compatibles.offline_compatible()):
-                if log:
-                    logger.info("'%s' will be executed every %s",
-                                task.task, support.time_converter(second=task.seconds))
-                yield task
-            else:
-                logger.error("'%s' is not a part of offline communication compatible request.", task.task)
-                remove_corrupted(task=task)
+            logger.error("'%s' is not a part of offline communication compatible request.", task.task)
+            remove_corrupted(task=task)

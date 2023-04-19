@@ -59,10 +59,9 @@ def volume(phrase: str = None, level: int = None) -> NoReturn:
     if 'master' in phrase or 'main' in phrase or caller in ('executor', 'starter'):
         main_volume(level=level)
         speaker_volume(level=level)
+    elif shared.called_by_offline or 'system' in phrase:
+        main_volume(level=level)
     else:
-        if shared.called_by_offline or 'system' in phrase:
-            main_volume(level=level)
-        else:
-            speaker_volume(level=level)
+        speaker_volume(level=level)
     if response:
         speaker.speak(text=response)

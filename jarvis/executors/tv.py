@@ -27,14 +27,17 @@ def tv_status(tv_ip_list: list, attempt: int = 0) -> str:
     for ip in tv_ip_list:
         if models.settings.os == models.supported_platforms.windows:
             if tv_stat := os.system(f"ping -c 1 -t 2 {ip} > NUL"):
-                logger.error("Connection timed out on %s. Ping result: %s", ip, tv_stat) if not attempt else None
+                None if attempt else logger.error(
+                    "Connection timed out on %s. Ping result: %s", ip, tv_stat
+                )
             else:
                 return ip
+        elif tv_stat := os.system(f"ping -c 1 -t 2 {ip} >/dev/null 2>&1"):
+            None if attempt else logger.error(
+                "Connection timed out on %s. Ping result: %s", ip, tv_stat
+            )
         else:
-            if tv_stat := os.system(f"ping -c 1 -t 2 {ip} >/dev/null 2>&1"):
-                logger.error("Connection timed out on %s. Ping result: %s", ip, tv_stat) if not attempt else None
-            else:
-                return ip
+            return ip
 
 
 def television(phrase: str) -> None:

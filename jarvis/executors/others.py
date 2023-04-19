@@ -44,18 +44,19 @@ def repeat(phrase: str) -> NoReturn:
     if "i" in phrase.lower().split():
         speaker.speak(text="Please tell me what to repeat.", run=True)
         if keyword := listener.listen():
-            if 'exit' in keyword or 'quit' in keyword or 'Xzibit' in keyword:
-                pass
-            else:
+            if (
+                'exit' not in keyword
+                and 'quit' not in keyword
+                and 'Xzibit' not in keyword
+            ):
                 speaker.speak(text=f"I heard {keyword}")
-    else:
-        if text := shared.text_spoken:
-            if text.startswith(f"Sure {models.env.title}, "):
-                speaker.speak(text)
-            else:
-                speaker.speak(f"Sure {models.env.title}, {text}")
+    elif text := shared.text_spoken:
+        if text.startswith(f"Sure {models.env.title}, "):
+            speaker.speak(text)
         else:
-            repeat("i")
+            speaker.speak(f"Sure {models.env.title}, {text}")
+    else:
+        repeat("i")
 
 
 def apps(phrase: str) -> None:
@@ -252,27 +253,25 @@ def meaning(phrase: str) -> None:
         response = listener.listen()
         if not response or word_match.word_match(phrase=response, match_list=keywords.keywords.exit_):
             return
-        meaning(phrase=response)
-    else:
-        if definition := dictionary.meaning(term=keyword):
-            n = 0
-            vowel = ['A', 'E', 'I', 'O', 'U']
-            for key, value in definition.items():
-                insert = 'an' if key[0] in vowel else 'a'
-                repeated = ' also ' if n != 0 else ' '
-                n += 1
-                mean = ', '.join(value[:2])
-                speaker.speak(text=f'{keyword} is{repeated}{insert} {key}, which means {mean}.')
-            if shared.called_by_offline:
-                return
-            speaker.speak(text=f'Do you wanna know how {keyword} is spelled?', run=True)
-            response = listener.listen()
-            if word_match.word_match(phrase=response, match_list=keywords.keywords.ok):
-                for letter in list(keyword.lower()):
-                    speaker.speak(text=letter)
-                speaker.speak(run=True)
         else:
-            speaker.speak(text=f"I'm sorry {models.env.title}! I was unable to get meaning for the word: {keyword}")
+            meaning(phrase=response)
+    elif definition := dictionary.meaning(term=keyword):
+        vowel = ['A', 'E', 'I', 'O', 'U']
+        for n, (key, value) in enumerate(definition.items()):
+            insert = 'an' if key[0] in vowel else 'a'
+            repeated = ' also ' if n != 0 else ' '
+            mean = ', '.join(value[:2])
+            speaker.speak(text=f'{keyword} is{repeated}{insert} {key}, which means {mean}.')
+        if shared.called_by_offline:
+            return
+        speaker.speak(text=f'Do you wanna know how {keyword} is spelled?', run=True)
+        response = listener.listen()
+        if word_match.word_match(phrase=response, match_list=keywords.keywords.ok):
+            for letter in list(keyword.lower()):
+                speaker.speak(text=letter)
+            speaker.speak(run=True)
+    else:
+        speaker.speak(text=f"I'm sorry {models.env.title}! I was unable to get meaning for the word: {keyword}")
 
 
 def notes() -> None:

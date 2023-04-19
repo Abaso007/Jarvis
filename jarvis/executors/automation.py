@@ -98,7 +98,7 @@ def auto_helper(offline_list: list) -> Union[str, None]:
             break  # Using break instead of continue as python doesn't like dict size change in-between a loop
 
         if day := automation_info.get("day"):
-            today = datetime.today().strftime("%A").upper()
+            today = datetime.now().strftime("%A").upper()
             if isinstance(day, list):
                 if today not in [d.upper() for d in day]:
                     continue
@@ -108,9 +108,7 @@ def auto_helper(offline_list: list) -> Union[str, None]:
                     pass
                 elif day == "WEEKDAY" and today in ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"]:
                     pass
-                elif today == day:
-                    pass
-                else:
+                elif today != day:
                     continue
 
         if automation_time != datetime.now().strftime("%I:%M %p"):

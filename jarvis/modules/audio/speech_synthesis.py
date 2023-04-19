@@ -40,20 +40,21 @@ def check_existing() -> bool:
         bool:
         A boolean flag whether a valid connection is present.
     """
-    if port_handler.is_port_in_use(port=models.env.speech_synthesis_port):
-        logger.info("%d is currently in use.", models.env.speech_synthesis_port)
-        try:
-            res = requests.get(url=f"http://{models.env.speech_synthesis_host}:{models.env.speech_synthesis_port}",
-                               timeout=1)
-            if res.ok:
-                logger.info('http://{host}:{port} is accessible.'.format(host=models.env.speech_synthesis_host,
-                                                                         port=models.env.speech_synthesis_port))
-                return True
-            return False
-        except EgressErrors as error:
-            logger.error(error)
-            if not port_handler.kill_port_pid(port=models.env.speech_synthesis_port):
-                logger.critical('ATTENTION::Failed to kill existing PID. Attempting to re-create session.')
+    if not port_handler.is_port_in_use(port=models.env.speech_synthesis_port):
+        return
+    logger.info("%d is currently in use.", models.env.speech_synthesis_port)
+    try:
+        res = requests.get(url=f"http://{models.env.speech_synthesis_host}:{models.env.speech_synthesis_port}",
+                           timeout=1)
+        if res.ok:
+            logger.info('http://{host}:{port} is accessible.'.format(host=models.env.speech_synthesis_host,
+                                                                     port=models.env.speech_synthesis_port))
+            return True
+        return False
+    except EgressErrors as error:
+        logger.error(error)
+        if not port_handler.kill_port_pid(port=models.env.speech_synthesis_port):
+            logger.critical('ATTENTION::Failed to kill existing PID. Attempting to re-create session.')
 
 
 def speech_synthesizer() -> NoReturn:

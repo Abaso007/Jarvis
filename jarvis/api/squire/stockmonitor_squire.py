@@ -79,8 +79,9 @@ def nasdaq() -> NoReturn:
             except yaml.YAMLError as error:
                 logger.error(error)
             if len(stock_monitor.stock_list) > 5_000:
-                logger.info("%s generated on %s looks re-usable." %
-                            (models.fileio.stock_list_backup, datetime.fromtimestamp(modified).strftime('%c')))
+                logger.info(
+                    f"{models.fileio.stock_list_backup} generated on {datetime.fromtimestamp(modified).strftime('%c')} looks re-usable."
+                )
                 return
     logger.info("Gathering stock list from webull.")
     try:

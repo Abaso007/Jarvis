@@ -130,8 +130,9 @@ def plot_mic(channels: List[int] = None, device: Union[str, int] = None, window:
                 with open(models.fileio.processes, 'w') as file:
                     yaml.dump(data=dump, stream=file)
             else:
-                logger.critical("ATTENTION::Missing %s's process ID in '%s'" %
-                                (plot_mic.__name__, models.fileio.processes))
+                logger.critical(
+                    f"ATTENTION::Missing {plot_mic.__name__}'s process ID in '{models.fileio.processes}'"
+                )
         else:
             logger.critical("ATTENTION::Missing '%s'", models.fileio.processes)
     logger.info("Feeding all arguments into dict.")
@@ -154,7 +155,7 @@ def plot_mic(channels: List[int] = None, device: Union[str, int] = None, window:
     try:
         _kick_off()
     except Exception as error:
-        logger.error(type(error).__name__ + ': ' + error.__str__())
+        logger.error(f'{type(error).__name__}: {error.__str__()}')
 
 
 def _kick_off() -> NoReturn:

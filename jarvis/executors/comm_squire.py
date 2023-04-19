@@ -46,10 +46,10 @@ def send_notification(phrase: str) -> None:
     for word in to_words:
         # Catches the last occurrence of the to word
         if msg_grouper := re.search(f'send (.*) {word}', phrase):
-            body = msg_grouper.group(1)
+            body = msg_grouper[1]
         # Catches first occurrence of the to word, making 'to' clumpy but since regex is used for 'to' it is okay
         if to_grouper := re.search(f'{word} (.*)', phrase):
-            to = to_grouper.group(1)
+            to = to_grouper[1]
         if body and to:
             body, to = body.strip(), to.strip()
             break
@@ -61,7 +61,7 @@ def send_notification(phrase: str) -> None:
     method_words = ['via', 'Via', 'using', 'Using']
     for word in method_words:
         if message := re.search(f'{word} (.*)', phrase):
-            method = message.group(1)
+            method = message[1]
             break
     else:
         logger.debug("Message portal not in right format. Looking into phrase to skim.")
@@ -103,9 +103,11 @@ def initiate_sms(body: str, to: Union[str, int]) -> None:
         body: Message that has to be sent.
         to: Target phone number or name.
     """
-    number = None
-    if not to[0].isdigit():
-        number = str(extract_contacts(name=to, key='phone'))
+    number = (
+        None
+        if to[0].isdigit()
+        else str(extract_contacts(name=to, key='phone'))
+    )
     if not number:
         number = str(util.extract_nos(input_=to, method=int))
 

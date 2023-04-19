@@ -5,6 +5,7 @@
 
 """
 
+
 import getpass
 import os
 import pathlib
@@ -43,6 +44,8 @@ class SupportedPlatforms(str, Enum):
 supported_platforms = SupportedPlatforms
 
 
+
+
 class Settings(BaseSettings):
     """Loads most common system values that do not change.
 
@@ -53,15 +56,12 @@ class Settings(BaseSettings):
         If the hosted device is other than Linux, macOS or Windows.
     """
 
-    if sys.stdin.isatty():
-        interactive = True
-    else:
-        interactive = False
+    interactive = bool(sys.stdin.isatty())
     pid: PositiveInt = os.getpid()
     ram: Union[PositiveInt, PositiveFloat] = psutil.virtual_memory().total
     physical_cores: PositiveInt = psutil.cpu_count(logical=False)
     logical_cores: PositiveInt = psutil.cpu_count(logical=True)
-    limited: bool = True if physical_cores < 4 else False
+    limited: bool = physical_cores < 4
     wake_words: Optional[List[str]]
     bot: str = "jarvis"
     invoker: str = pathlib.PurePath(sys.argv[0]).stem
@@ -73,7 +73,10 @@ class Settings(BaseSettings):
             "Currently Jarvis can run only on Linux, Mac and Windows OS.\n\n"
             f"\n{''.join('*' for _ in range(80))}\n"
         )
-    legacy = True if os == supported_platforms.macOS and Version(platform.mac_ver()[0]) < Version('10.14') else False
+    legacy = os == supported_platforms.macOS and Version(
+        platform.mac_ver()[0]
+    ) < Version('10.14')
+
 
 
 settings = Settings()
@@ -144,7 +147,7 @@ class BackgroundTask(BaseModel):
         raise ValueError('bad value')
 
     @validator('ignore_hours', allow_reuse=True)
-    def check_hours_format(cls, v, values, **kwargs):  # noqa
+    def check_hours_format(cls, v, values, **kwargs):    # noqa
         """Validate each entry in ignore hours list."""
         if not v:
             return []
@@ -167,9 +170,9 @@ class BackgroundTask(BaseModel):
                 if end < 24:
                     end += 1
                 if start < end:
-                    v = [i for i in range(start, end)]
+                    v = list(range(start, end))
                 else:
-                    v = [i for i in range(start, 24)] + [i for i in range(0, end)]
+                    v = list(range(start, 24)) + list(range(end))
                 if int(form_list[1]) == 24:
                     v.append(0)
             else:
@@ -331,10 +334,9 @@ class EnvConfig(BaseSettings):
             return
         if int(value) in list(map(lambda tag: tag['index'], get_audio_devices(channels=channel_type.input_channels))):
             return value
-        else:
-            complicated = dict(ChainMap(*list(map(lambda tag: {tag['index']: tag['name']},
-                                                  get_audio_devices(channels=channel_type.input_channels)))))
-            raise InvalidEnvVars(f"value should be one of {complicated}")
+        complicated = dict(ChainMap(*list(map(lambda tag: {tag['index']: tag['name']},
+                                              get_audio_devices(channels=channel_type.input_channels)))))
+        raise InvalidEnvVars(f"value should be one of {complicated}")
 
     # noinspection PyMethodParameters
     @validator("speaker_index", pre=True, allow_reuse=True)
@@ -345,10 +347,9 @@ class EnvConfig(BaseSettings):
             return
         if int(value) in list(map(lambda tag: tag['index'], get_audio_devices(channels=channel_type.output_channels))):
             return value
-        else:
-            complicated = dict(ChainMap(*list(map(lambda tag: {tag['index']: tag['name']},
-                                                  get_audio_devices(channels=channel_type.output_channels)))))
-            raise InvalidEnvVars(f"value should be one of {complicated}")
+        complicated = dict(ChainMap(*list(map(lambda tag: {tag['index']: tag['name']},
+                                              get_audio_devices(channels=channel_type.output_channels)))))
+        raise InvalidEnvVars(f"value should be one of {complicated}")
 
     # noinspection PyMethodParameters
     @validator("birthday", pre=True, allow_reuse=True)

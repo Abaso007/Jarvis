@@ -46,16 +46,15 @@ def vpn_checker() -> Union[bool, str]:
         return False
     if ip_address_.startswith("192") or ip_address_.startswith("127"):
         return ip_address_
+    if info := public_ip_info():
+        speaker.speak(text=f"You have your VPN turned on {models.env.title}! A connection has been detected to "
+                           f"{info.get('ip')} at {info.get('city')} {info.get('region')}, "
+                           f"maintained by {info.get('org')}. Please note that none of the home integrations will "
+                           "work with VPN enabled.")
     else:
-        if info := public_ip_info():
-            speaker.speak(text=f"You have your VPN turned on {models.env.title}! A connection has been detected to "
-                               f"{info.get('ip')} at {info.get('city')} {info.get('region')}, "
-                               f"maintained by {info.get('org')}. Please note that none of the home integrations will "
-                               "work with VPN enabled.")
-        else:
-            speaker.speak(text=f"I was unable to connect to the internet {models.env.title}! "
-                               "Please check your connection.")
-        return False
+        speaker.speak(text=f"I was unable to connect to the internet {models.env.title}! "
+                           "Please check your connection.")
+    return False
 
 
 def public_ip_info() -> Dict[str, str]:
@@ -85,10 +84,7 @@ def ip_info(phrase: str) -> None:
         if not ip_address():
             speaker.speak(text=f"You are not connected to the internet {models.env.title}!")
             return
-        if ssid := get_connection_info():
-            ssid = f"for the connection {ssid} "
-        else:
-            ssid = ""
+        ssid = f"for the connection {ssid} " if (ssid := get_connection_info()) else ""
         if public_ip := public_ip_info():
             output = f"My public IP {ssid}is {public_ip.get('ip')}"
         else:
@@ -125,7 +121,7 @@ def get_connection_info(target: str = "SSID") -> Union[str, None]:
     if models.settings.os == models.supported_platforms.macOS:
         out, err = process.communicate()
         if error := process.returncode:
-            logger.error("Failed to fetch %s with exit code [%s]: %s" % (target, error, err))
+            logger.error(f"Failed to fetch {target} with exit code [{error}]: {err}")
             return
         # noinspection PyTypeChecker
         return dict(map(str.strip, info.split(": ")) for info in out.decode("utf-8").splitlines()[:-1] if
@@ -136,9 +132,8 @@ def get_connection_info(target: str = "SSID") -> Union[str, None]:
             return result[0].split(':')[-1].strip()
         else:
             logger.error("Failed to fetch %s", target)
-    else:
-        if process:
-            return process.decode(encoding='UTF-8').strip()
+    elif process:
+        return process.decode(encoding='UTF-8').strip()
 
 
 def speed_test() -> None:

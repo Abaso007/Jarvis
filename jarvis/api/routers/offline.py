@@ -64,8 +64,9 @@ async def offline_communicator_api(request: Request, input_data: OfflineCommunic
         FileResponse:
         Returns the audio file as a response if audio request is made.
     """
-    logger.debug("Connection received from %s via %s using %s" %
-                 (request.client.host, request.headers.get('host'), request.headers.get('user-agent')))
+    logger.debug(
+        f"Connection received from {request.client.host} via {request.headers.get('host')} using {request.headers.get('user-agent')}"
+    )
     if not (command := input_data.command.strip()):
         raise APIResponse(status_code=HTTPStatus.NO_CONTENT.real, detail=HTTPStatus.NO_CONTENT.__dict__['phrase'])
 
@@ -137,15 +138,14 @@ async def offline_communicator_api(request: Request, input_data: OfflineCommunic
         ), raise_for_status=False):
             return binary
     elif input_data.native_audio:
-        if native_audio_wav := tts_stt.text_to_audio(text=response):
-            logger.info("Storing response as %s in native audio.", native_audio_wav)
-            Thread(target=support.remove_file, kwargs={'delay': 2, 'filepath': native_audio_wav}, daemon=True).start()
-            return FileResponse(path=native_audio_wav, media_type='application/octet-stream',
-                                filename="synthesized.wav", status_code=HTTPStatus.OK.real)
-        else:
+        if not (native_audio_wav := tts_stt.text_to_audio(text=response)):
             raise APIResponse(status_code=HTTPStatus.INTERNAL_SERVER_ERROR.real,
                               detail="Failed to generate audio file in native voice. "
                                      "This feature can be flaky at times as it relies on native wav to kernel specific "
                                      "wav conversion. Please use `speech_timeout` instead to get an audio response.")
+        logger.info("Storing response as %s in native audio.", native_audio_wav)
+        Thread(target=support.remove_file, kwargs={'delay': 2, 'filepath': native_audio_wav}, daemon=True).start()
+        return FileResponse(path=native_audio_wav, media_type='application/octet-stream',
+                            filename="synthesized.wav", status_code=HTTPStatus.OK.real)
     else:
         raise APIResponse(status_code=HTTPStatus.OK.real, detail=response)
