@@ -56,14 +56,13 @@ class LGWebOS:
             self._reconnect = True
             if not shared.called_by_offline:
                 playsound(sound=models.indicators.tv_scan, block=False)
-            if discovered := WebOSClient.discover():
-                self.client = discovered[0]
-                try:
-                    self.client.connect()
-                except (TimeoutError, BrokenPipeError) as error:
-                    logger.error(error)
-                    raise TVError
-            else:
+            if not (discovered := WebOSClient.discover()):
+                raise TVError
+            self.client = discovered[0]
+            try:
+                self.client.connect()
+            except (TimeoutError, BrokenPipeError) as error:
+                logger.error(error)
                 raise TVError
         except (TimeoutError, BrokenPipeError) as error:
             logger.error(error)
@@ -80,12 +79,15 @@ class LGWebOS:
 
         if self._reconnect:
             self._reconnect = False
-            logger.critical("ATTENTION::Client key has been generated. Store it in '%s' to re-use." %
-                            models.fileio.smart_devices)
+            logger.critical(
+                f"ATTENTION::Client key has been generated. Store it in '{models.fileio.smart_devices}' to re-use."
+            )
             logger.critical(str(store))
 
         self.system = SystemControl(self.client)
-        self.system.notify("Jarvis is controlling the TV now.") if not self._init_status else None
+        None if self._init_status else self.system.notify(
+            "Jarvis is controlling the TV now."
+        )
         self.media = MediaControl(self.client)
         self.app = ApplicationControl(self.client)
         self.source_control = SourceControl(self.client)

@@ -122,10 +122,7 @@ class Camera:
             return
 
         for list_ in list_splitter(original_list=output, delimiter='SystemName'):
-            values = {}
-            for sub_list in list_:
-                values[sub_list.split('=')[0]] = sub_list.split('=')[1]
-            yield values
+            yield {sub_list.split('=')[0]: sub_list.split('=')[1] for sub_list in list_}
 
     def _list_cameras_windows(self) -> Generator[str]:
         """Yields the camera name for WindowsOS.

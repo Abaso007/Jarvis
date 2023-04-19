@@ -31,8 +31,9 @@ def timeout(seconds: Union[PositiveInt, PositiveFloat], function: Callable,
     process = multiprocessing.Process(target=function, args=args or [], kwargs=kwargs or {})
     _start = time.time()
     if logger:
-        logger.info("Starting %s at %s with timeout: %s" %
-                    (function.__name__, time.strftime('%H:%M:%S', time.localtime(_start)), seconds))
+        logger.info(
+            f"Starting {function.__name__} at {time.strftime('%H:%M:%S', time.localtime(_start))} with timeout: {seconds}"
+        )
     process.start()
     process.join(timeout=seconds)
     exec_time = round(float(time.time() - _start), 2)

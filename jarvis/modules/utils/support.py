@@ -54,7 +54,7 @@ def hostname_to_ip(hostname: str, localhost: bool = True) -> List[str]:
         hostname: Takes the hostname of a device as an argument.
         localhost: Takes a boolean value to behave differently in case of localhost.
     """
-    log = False if current_process().name == "background_tasks" else True
+    log = current_process().name != "background_tasks"
     try:
         _hostname, _alias_list, _ipaddr_list = socket.gethostbyname_ex(hostname)
     except socket.error as error:
@@ -67,16 +67,14 @@ def hostname_to_ip(hostname: str, localhost: bool = True) -> List[str]:
         logger.warning("Host %s has multiple interfaces. %s", hostname, _ipaddr_list) if localhost else None
         return _ipaddr_list
     else:
-        if localhost:
-            ip_addr = internet.ip_address()
-            if _ipaddr_list[0].split('.')[0] == ip_addr.split('.')[0]:
-                return _ipaddr_list
-            else:
-                logger.error("NetworkID of the InterfaceIP [%s] of host '%s' does not match the network id of the "
-                             "DeviceIP [%s].", ip_addr, hostname, ', '.join(_ipaddr_list)) if log else None
-                return []
-        else:
+        if not localhost:
             return _ipaddr_list
+        ip_addr = internet.ip_address()
+        if _ipaddr_list[0].split('.')[0] == ip_addr.split('.')[0]:
+            return _ipaddr_list
+        logger.error("NetworkID of the InterfaceIP [%s] of host '%s' does not match the network id of the "
+                     "DeviceIP [%s].", ip_addr, hostname, ', '.join(_ipaddr_list)) if log else None
+        return []
 
 
 def country_timezone() -> Dict[str, str]:
@@ -103,7 +101,9 @@ def celebrate() -> str:
             countrycode = country_timezone().get(idna_timezone)  # get country code using timezone map
     if not countrycode:
         countrycode = "US"  # default to US
-    if current_holiday := country_holidays(countrycode.upper()).get(datetime.today().date()):
+    if current_holiday := country_holidays(countrycode.upper()).get(
+        datetime.now().date()
+    ):
         return current_holiday
     elif models.env.birthday == datetime.now().strftime("%d-%B"):
         return "Birthday"
@@ -126,9 +126,9 @@ def get_capitalized(phrase: str, ignore: Iterable = None, dot: bool = True) -> U
     place = ""
     for word in phrase.split():
         if word[0].isupper() and word.lower() not in map(lambda x: x.lower(), ignore):  # convert iterable to lowercase
-            place += word + " "
+            place += f"{word} "
         elif "." in word and dot:
-            place += word + " "
+            place += f"{word} "
     return place.strip() if place.strip() else None
 
 
@@ -160,10 +160,16 @@ def unrecognized_dumper(train_data: dict) -> NoReturn:
         data = {key1: {dt_string: value1} for key1, value1 in train_data.items()}
 
     data = {
-        func: {
-            dt: unrec for dt, unrec in sorted(unrec_dict.items(), reverse=True,
-                                              key=lambda item: datetime.strptime(item[0], "%B %d, %Y %H:%M:%S.%f"))
-        } for func, unrec_dict in data.items()
+        func: dict(
+            sorted(
+                unrec_dict.items(),
+                reverse=True,
+                key=lambda item: datetime.strptime(
+                    item[0], "%B %d, %Y %H:%M:%S.%f"
+                ),
+            )
+        )
+        for func, unrec_dict in data.items()
     }
 
     with open(models.fileio.training_data, 'w') as writer:
@@ -241,7 +247,7 @@ def build_lookup() -> List[str]:
         List[str]:
         Returns a list of days ahead and before of the lookup date.
     """
-    day_str = datetime.today().strftime("%A")
+    day_str = datetime.now().strftime("%A")
     floating_days = [""] * 8
     for idx, day in enumerate(days_in_week):
         if day == day_str:
@@ -265,16 +271,16 @@ def detect_lookup_date(phrase: str) -> Tuple[datetime, str]:
         Returns a tuple of the datetime object, the detected/supported humanized date.
     """
     if "before" in phrase and "yesterday" in phrase:
-        datetime_obj = datetime.today() - timedelta(days=2)
+        datetime_obj = datetime.now() - timedelta(days=2)
         addon = "day before yesterday"
     elif "yesterday" in phrase:
-        datetime_obj = datetime.today() - timedelta(days=1)
+        datetime_obj = datetime.now() - timedelta(days=1)
         addon = "yesterday"
     elif "after" in phrase and "tomorrow" in phrase:
-        datetime_obj = datetime.today() + timedelta(days=2)
+        datetime_obj = datetime.now() + timedelta(days=2)
         addon = "day after tomorrow"
     elif "tomorrow" in phrase:
-        datetime_obj = datetime.today() + timedelta(days=1)
+        datetime_obj = datetime.now() + timedelta(days=1)
         addon = "tomorrow"
     else:
         return humanized_day_to_datetime(phrase=phrase)
@@ -315,7 +321,7 @@ def humanized_day_to_datetime(phrase: str) -> Union[Tuple[datetime, str], NoRetu
     else:
         logger.error("Supports only 'last', 'next' and 'this' but received %s", phrase)
         return
-    return datetime.today() + td, addon
+    return datetime.now() + td, addon
 
 
 def check_stop() -> List[str]:
@@ -346,7 +352,7 @@ def exit_message() -> str:
 
     if am_pm == "AM" and int(hour) < 10:
         exit_msg = f"Have a nice day, and happy {day}."
-    elif am_pm == "AM" and int(hour) >= 10:
+    elif am_pm == "AM":
         exit_msg = f"Enjoy your {day}."
     elif am_pm == "PM" and (int(hour) == 12 or int(hour) < 3) and day in ["Friday", "Saturday"]:
         exit_msg = "Have a nice afternoon, and enjoy your weekend."

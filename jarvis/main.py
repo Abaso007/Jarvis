@@ -133,10 +133,9 @@ class Activator:
                     elif len(models.env.wake_words) > 1 and result >= 0:
                         models.settings.bot = models.env.wake_words[result]
                         self.executor()
-                else:
-                    if result >= 0:
-                        models.settings.bot = models.env.wake_words[result]
-                        self.executor()
+                elif result >= 0:
+                    models.settings.bot = models.env.wake_words[result]
+                    self.executor()
                 if models.settings.limited:
                     continue
                 keywords_handler.rewrite_keywords()

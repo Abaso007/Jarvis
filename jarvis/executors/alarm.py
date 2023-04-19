@@ -50,8 +50,9 @@ def create_alarm(hour: str, minute: str, am_pm: str, phrase: str, timer: str = N
             add = " every day."
         elif day:
             add = f" every {day}."
-        elif datetime.strptime(datetime.today().strftime("%I:%M %p"), "%I:%M %p") >= \
-                datetime.strptime(f"{hour}:{minute} {am_pm}", "%I:%M %p"):
+        elif datetime.strptime(
+            datetime.now().strftime("%I:%M %p"), "%I:%M %p"
+        ) >= datetime.strptime(f"{hour}:{minute} {am_pm}", "%I:%M %p"):
             add = " tomorrow."
         else:
             add = "."

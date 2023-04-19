@@ -115,16 +115,18 @@ def weather(phrase: str = None) -> None:
         sunrise = datetime.fromtimestamp(during_key['sunrise']).strftime("%I:%M %p")
         sunset = datetime.fromtimestamp(during_key['sunset']).strftime("%I:%M %p")
         if 'sunrise' in phrase or 'sun rise' in phrase or ('sun' in phrase and 'rise' in phrase):
-            if datetime.strptime(datetime.today().strftime("%I:%M %p"), "%I:%M %p") >= \
-                    datetime.strptime(sunrise, "%I:%M %p"):
+            if datetime.strptime(
+                datetime.now().strftime("%I:%M %p"), "%I:%M %p"
+            ) >= datetime.strptime(sunrise, "%I:%M %p"):
                 tense = "will be"
             else:
                 tense = "was"
             speaker.speak(text=f"{tell} in {weather_location}, sunrise {tense} at {sunrise}.")
             return
         if 'sunset' in phrase or 'sun set' in phrase or ('sun' in phrase and 'set' in phrase):
-            if datetime.strptime(datetime.today().strftime("%I:%M %p"), "%I:%M %p") >= \
-                    datetime.strptime(sunset, "%I:%M %p"):
+            if datetime.strptime(
+                datetime.now().strftime("%I:%M %p"), "%I:%M %p"
+            ) >= datetime.strptime(sunset, "%I:%M %p"):
                 tense = "will be"
             else:
                 tense = "was"
@@ -149,16 +151,18 @@ def weather(phrase: str = None) -> None:
     sunset = datetime.fromtimestamp(response['daily'][0]['sunset']).strftime("%I:%M %p")
     if phrase:
         if 'sunrise' in phrase or 'sun rise' in phrase or ('sun' in phrase and 'rise' in phrase):
-            if datetime.strptime(datetime.today().strftime("%I:%M %p"), "%I:%M %p") >= \
-                    datetime.strptime(sunrise, "%I:%M %p"):
+            if datetime.strptime(
+                datetime.now().strftime("%I:%M %p"), "%I:%M %p"
+            ) >= datetime.strptime(sunrise, "%I:%M %p"):
                 tense = "will be"
             else:
                 tense = "was"
             speaker.speak(text=f"In {weather_location}, sunrise {tense} at {sunrise}.")
             return
         if 'sunset' in phrase or 'sun set' in phrase or ('sun' in phrase and 'set' in phrase):
-            if datetime.strptime(datetime.today().strftime("%I:%M %p"), "%I:%M %p") >= \
-                    datetime.strptime(sunset, "%I:%M %p"):
+            if datetime.strptime(
+                datetime.now().strftime("%I:%M %p"), "%I:%M %p"
+            ) >= datetime.strptime(sunset, "%I:%M %p"):
                 tense = "will be"
             else:
                 tense = "was"

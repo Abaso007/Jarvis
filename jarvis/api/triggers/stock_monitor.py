@@ -61,7 +61,7 @@ def generate_graph(logger: logging.Logger, ticker: str, bars: int = 300) -> Unio
 
     plt.setp(ax.get_xticklabels(), rotation=0, ha="center")
     plt.grid()
-    graph_file = ticker + ".png"
+    graph_file = f"{ticker}.png"
     fig.savefig(graph_file, format="png")
     if os.path.isfile(graph_file):
         return graph_file

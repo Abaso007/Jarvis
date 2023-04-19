@@ -288,11 +288,11 @@ class TelegramBot:
                                           payload={'offset': offset, 'timeout': 60})
             if response.ok:
                 response = response.json()
+            elif response.status_code == 409:
+                raise BotInUse(
+                    response.json().get('description')
+                )
             else:
-                if response.status_code == 409:
-                    raise BotInUse(
-                        response.json().get('description')
-                    )
                 raise ConnectionError(
                     response.json()
                 )
@@ -321,12 +321,14 @@ class TelegramBot:
         """
         chat = payload['from']
         if chat['is_bot']:
-            logger.error("Bot %s accessed %s" % (chat['username'], payload.get('text')))
+            logger.error(f"Bot {chat['username']} accessed {payload.get('text')}")
             self.send_message(chat_id=chat['id'],
                               response=f"Sorry {chat['first_name']}! I can't process requests from bots.")
             return False
         if chat['id'] not in models.env.bot_chat_ids or not username_is_valid(username=chat['username']):
-            logger.info("%s: %s" % (chat['username'], payload['text'])) if payload.get('text') else None
+            logger.info(f"{chat['username']}: {payload['text']}") if payload.get(
+                'text'
+            ) else None
             logger.error("Unauthorized chatID [%d] or userName [%s]" % (chat['id'], chat['username']))
             self.send_message(chat_id=chat['id'], response=f"401 Unauthorized user: ({chat['username']})")
             return False
@@ -347,10 +349,12 @@ class TelegramBot:
         if int(time.time()) - payload['date'] < 60:
             return True
         request_time = time.strftime('%m-%d-%Y %H:%M:%S', time.localtime(payload['date']))
-        logger.warning("Request timed out when %s requested %s" % (payload['from']['username'], payload.get('text')))
+        logger.warning(
+            f"Request timed out when {payload['from']['username']} requested {payload.get('text')}"
+        )
         logger.warning("Request time: %s", request_time)
         if "override" in payload.get('text', '').lower() and not \
-                word_match.word_match(phrase=payload.get('text', ''), match_list=keywords.keywords.kill):
+                    word_match.word_match(phrase=payload.get('text', ''), match_list=keywords.keywords.kill):
             logger.info("%s requested a timeout override.", payload['from']['username'])
             return True
         else:
@@ -414,8 +418,7 @@ class TelegramBot:
             if converted:
                 os.remove(filename)
                 filename = filename.replace(".ogg", ".flac")
-                audio_to_text = tts_stt.audio_to_text(filename=filename)
-                if audio_to_text:
+                if audio_to_text := tts_stt.audio_to_text(filename=filename):
                     payload['text'] = audio_to_text
                     self.jarvis(payload=payload)
                     return
@@ -492,8 +495,8 @@ class TelegramBot:
             return
         split_text = payload['text'].lower().split()
         if ('file' in split_text or 'files' in split_text) and \
-                ('send' in split_text or 'get' in split_text or 'list' in split_text):
-            if 'list' in split_text and ('files' in split_text or 'file' in split_text):
+                    ('send' in split_text or 'get' in split_text or 'list' in split_text):
+            if 'list' in split_text:
                 # Set parse_mode to an explicit None, so the API doesn't try to parse as HTML or Markdown
                 # since the result has file names and paths
                 self.send_message(chat_id=payload['from']['id'], response=file_handler.list_files(), parse_mode=None)

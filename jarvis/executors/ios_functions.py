@@ -26,7 +26,7 @@ def device_selector(phrase: str) -> Union[AppleDevice, None]:
         Returns the selected device from the class ``AppleDevice``
     """
     icloud_api = PyiCloudService(models.env.icloud_user, models.env.icloud_pass)
-    devices = [device for device in icloud_api.devices]
+    devices = list(icloud_api.devices)
     devices_str = [{str(device).split(":")[0].strip(): str(device).split(":")[1].strip()} for device in devices]
     closest_match = [
         (difflib.SequenceMatcher(a=phrase, b=key).ratio() + difflib.SequenceMatcher(a=phrase, b=val).ratio()) / 2
@@ -51,9 +51,8 @@ def location_services(device: AppleDevice) -> Union[None, dict]:
             return location.get_location_from_coordinates(
                 coordinates=(raw_location["latitude"], raw_location["longitude"])
             )
-        else:
-            logger.error("Unable to retrieve location for the device: '%s'", device)
-            return
+        logger.error("Unable to retrieve location for the device: '%s'", device)
+        return
     except PyiCloudAPIResponseException as error:
         logger.error("Unable to retrieve location for the device: '%s'", device)
         logger.error(error)

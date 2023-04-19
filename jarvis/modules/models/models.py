@@ -80,7 +80,7 @@ def _main_process_validations() -> NoReturn:
             )
 
     # If sensitivity is an integer or float, converts it to a list
-    if isinstance(env.sensitivity, float) or isinstance(env.sensitivity, PositiveInt):
+    if isinstance(env.sensitivity, (float, PositiveInt)):
         env.sensitivity = [env.sensitivity] * len(env.wake_words)
 
     # Create all necessary DB tables during startup
@@ -91,14 +91,13 @@ def _main_process_validations() -> NoReturn:
 
 def _global_validations() -> NoReturn:
     """Validations that should happen for all processes including parent and child."""
-    main = True if current_process().name == "MainProcess" else False
+    main = current_process().name == "MainProcess"
     # Validate root password present for linux systems
-    if settings.os == supported_platforms.linux:
-        if not env.root_password:
-            raise MissingEnvVars(
-                "Linux requires the host machine's password to be set as the env var: "
-                "ROOT_PASSWORD due to terminal automations."
-            )
+    if settings.os == supported_platforms.linux and not env.root_password:
+        raise MissingEnvVars(
+            "Linux requires the host machine's password to be set as the env var: "
+            "ROOT_PASSWORD due to terminal automations."
+        )
 
     voice_names = [__voice.name for __voice in voices]
     if not env.voice_name:
@@ -108,11 +107,10 @@ def _global_validations() -> NoReturn:
             raise InvalidEnvVars(
                 f"{env.voice_name!r} is not available.\nAvailable voices are: {', '.join(voice_names)}"
             )
-        else:
-            _set_default_voice_name()
-            warnings.warn(
-                f"{env.voice_name!r} is not available. Defaulting to {env.voice_name!r}"
-            )
+        _set_default_voice_name()
+        warnings.warn(
+            f"{env.voice_name!r} is not available. Defaulting to {env.voice_name!r}"
+        )
 
     if env.website and env.website.startswith("http"):
         env.website = env.website.lstrip(f"{env.website.scheme}://")
@@ -121,30 +119,26 @@ def _global_validations() -> NoReturn:
         env.open_gmail_user = env.gmail_user
         env.open_gmail_pass = env.gmail_pass
 
-    # Note: Pydantic validation for ICS_URL can be implemented using regex=".*ics$"
-    # However it will NOT work in this use case, since the type hint is HttpUrl
     if env.ics_url and not env.ics_url.endswith('.ics'):
         if main:
             raise InvalidEnvVars(
                 "'ICS_URL' should end with .ics"
             )
-        else:
-            env.ics_url = None
-            warnings.warn(
-                "'ICS_URL' should end with .ics"
-            )
+        env.ics_url = None
+        warnings.warn(
+            "'ICS_URL' should end with .ics"
+        )
 
     if env.speech_synthesis_port == env.offline_port:
         if main:
             raise InvalidEnvVars(
                 "Speech synthesizer and offline communicator cannot run simultaneously on the same port number."
             )
-        else:
-            env.speech_synthesis_port = util.get_free_port()
-            warnings.warn(
-                "Speech synthesizer and offline communicator cannot run on same port number. "
-                f"Defaulting to {env.speech_synthesis_port}"
-            )
+        env.speech_synthesis_port = util.get_free_port()
+        warnings.warn(
+            "Speech synthesizer and offline communicator cannot run on same port number. "
+            f"Defaulting to {env.speech_synthesis_port}"
+        )
 
     if env.author_mode:
         if all([env.robinhood_user, env.robinhood_pass, env.robinhood_pass]):
@@ -162,10 +156,7 @@ def _global_validations() -> NoReturn:
 
     # Validate if able to read camera only if a camera env var is set,
     try:
-        if env.camera_index is None:
-            cameras = []
-        else:
-            cameras = Camera().list_cameras()
+        cameras = [] if env.camera_index is None else Camera().list_cameras()
     except CameraError:
         cameras = []
     if cameras:
@@ -176,13 +167,12 @@ def _global_validations() -> NoReturn:
                     "Camera index cannot exceed the number of available cameras.\n"
                     f"{len(cameras)} available cameras: {', '.join([f'{i}: {c}' for i, c in enumerate(cameras)])}"
                 )
-            else:
-                warnings.warn(
-                    f"Camera index # {env.camera_index} unavailable.\n"
-                    "Camera index cannot exceed the number of available cameras.\n"
-                    f"{len(cameras)} available cameras: {', '.join([f'{i}: {c}' for i, c in enumerate(cameras)])}"
-                )
-                env.camera_index = None
+            warnings.warn(
+                f"Camera index # {env.camera_index} unavailable.\n"
+                "Camera index cannot exceed the number of available cameras.\n"
+                f"{len(cameras)} available cameras: {', '.join([f'{i}: {c}' for i, c in enumerate(cameras)])}"
+            )
+            env.camera_index = None
     else:
         env.camera_index = None
 
@@ -193,9 +183,8 @@ def _global_validations() -> NoReturn:
         if cam is None or not cam.isOpened() or cam.read() == (False, None):
             if main:
                 raise CameraError(f"Unable to read the camera - {cameras[env.camera_index]}")
-            else:
-                warnings.warn(f"Unable to read the camera - {cameras[env.camera_index]}")
-                env.camera_index = None
+            warnings.warn(f"Unable to read the camera - {cameras[env.camera_index]}")
+            env.camera_index = None
         cam.release()
 
     # Validate voice for speech synthesis

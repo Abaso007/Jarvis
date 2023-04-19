@@ -95,21 +95,21 @@ if not os.getcwd().endswith("Jarvis") or all([models.env.robinhood_user, models.
             - The UUID is deleted from the object as soon as the argument is checked for the first time.
             - Page refresh is useless because the value in memory is cleared as soon as it is authed once.
         """
-        logger.debug("Connection received from %s via %s using %s" %
-                     (request.client.host, request.headers.get('host'), request.headers.get('user-agent')))
+        logger.debug(
+            f"Connection received from {request.client.host} via {request.headers.get('host')} using {request.headers.get('user-agent')}"
+        )
 
         if not token:
             raise APIResponse(status_code=HTTPStatus.UNAUTHORIZED.real,
                               detail=HTTPStatus.UNAUTHORIZED.__dict__['phrase'])
-        if secrets.compare_digest(token, robinhood.token):
-            robinhood.token = None
-            if not os.path.isfile(models.fileio.robinhood):
-                raise APIResponse(status_code=HTTPStatus.NOT_FOUND.real, detail='Static file was not found on server.')
-            with open(models.fileio.robinhood) as static_file:
-                html_content = static_file.read()
-            content_type, _ = mimetypes.guess_type(html_content)
-            return HTMLResponse(status_code=HTTPStatus.TEMPORARY_REDIRECT.real,
-                                content=html_content, media_type=content_type)  # serves as a static webpage
-        else:
+        if not secrets.compare_digest(token, robinhood.token):
             raise APIResponse(status_code=HTTPStatus.EXPECTATION_FAILED.real,
                               detail='Requires authentication since endpoint uses single-use token.')
+        robinhood.token = None
+        if not os.path.isfile(models.fileio.robinhood):
+            raise APIResponse(status_code=HTTPStatus.NOT_FOUND.real, detail='Static file was not found on server.')
+        with open(models.fileio.robinhood) as static_file:
+            html_content = static_file.read()
+        content_type, _ = mimetypes.guess_type(html_content)
+        return HTMLResponse(status_code=HTTPStatus.TEMPORARY_REDIRECT.real,
+                            content=html_content, media_type=content_type)  # serves as a static webpage

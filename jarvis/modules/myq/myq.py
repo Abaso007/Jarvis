@@ -88,12 +88,11 @@ async def garage_controller(phrase: str) -> str:
                 return f"Your {device} is currently closing {models.env.title}! " \
                        "You may want to retry after a minute or two!"
             logger.info("Opening %s.", device)
-            if devices[device].open_allowed:
-                open_result = await devices[device].open()
-                logger.debug(open_result)
-                return f"Opening your {device} {models.env.title}!"
-            else:
+            if not devices[device].open_allowed:
                 return f"Unattended open is disabled on your {device} {models.env.title}!"
+            open_result = await devices[device].open()
+            logger.debug(open_result)
+            return f"Opening your {device} {models.env.title}!"
         elif operation.CLOSE in phrase:
             if status['state']['door_state'] == operation.CLOSED:
                 return f"Your {device} is already closed {models.env.title}!"
@@ -103,12 +102,11 @@ async def garage_controller(phrase: str) -> str:
                 return f"Your {device} is currently opening {models.env.title}! " \
                        "You may want to try to after a minute or two!"
             logger.info("Closing %s.", device)
-            if devices[device].close_allowed:
-                close_result = await devices[device].close()
-                logger.debug(close_result)
-                return f"Closing your {device} {models.env.title}!"
-            else:
+            if not devices[device].close_allowed:
                 return f"Unattended close is disabled on your {device} {models.env.title}!"
+            close_result = await devices[device].close()
+            logger.debug(close_result)
+            return f"Closing your {device} {models.env.title}!"
         else:
             logger.info("%s: %s", device, status['state']['door_state'])
             return f"Your {device} is currently {status['state']['door_state']} {models.env.title}! " \

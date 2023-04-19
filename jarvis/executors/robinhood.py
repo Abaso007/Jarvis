@@ -27,11 +27,10 @@ def watcher(rh, result: list) -> str:
         share_id = str(data["instrument"].split("/")[-2])
         buy = round(float(data["average_buy_price"]), 2)
         shares_count = int(data["quantity"].split(".")[0])
-        if shares_count != 0:
-            n = n + 1
-            n_ = n_ + shares_count
-        else:
+        if shares_count == 0:
             continue
+        n = n + 1
+        n_ = n_ + shares_count
         try:
             raw_details = rh.get_quote(share_id)
         except (InvalidTickerSymbol, InvalidInstrumentId) as error:

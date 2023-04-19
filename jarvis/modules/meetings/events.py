@@ -110,10 +110,10 @@ def events_gatherer() -> str:
     local_events = {}
     for i in range(count):
         if i < len(event_name):
-            event_time[i] = re.search(" at (.*)", event_time[i]).group(1).strip()
+            event_time[i] = re.search(" at (.*)", event_time[i])[1].strip()
             dt_string = datetime.strptime(event_time[i], "%I:%M:%S %p")
             event_time[i] = dt_string.strftime("%I:%M %p")
-            local_events.update({event_name[i]: event_time[i]})
+            local_events[event_name[i]] = event_time[i]
     ordered_data = sorted(local_events.items(), key=lambda x: datetime.strptime(x[1], "%I:%M %p"))
     for index, event in enumerate(ordered_data):
         if count == 1:

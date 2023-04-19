@@ -50,13 +50,12 @@ def run_async(func: Callable, *args: Any, **kwargs: Any) -> Any:
         loop = asyncio.get_running_loop()
     except RuntimeError:
         loop = None
-    if loop and loop.is_running():
-        thread = AsyncThread(func, args, kwargs)
-        thread.start()
-        thread.join()
-        return thread.result
-    else:
+    if not loop or not loop.is_running():
         return asyncio.run(func(*args, **kwargs))
+    thread = AsyncThread(func, args, kwargs)
+    thread.start()
+    thread.join()
+    return thread.result
 
 
 def garage(phrase: str) -> NoReturn:

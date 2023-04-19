@@ -28,11 +28,10 @@ def listener_control(phrase: str) -> NoReturn:
         else:
             put_listener_state(state=True)
             speaker.speak(text=f"Listener has been activated {models.env.title}!")
+    elif state:
+        speaker.speak(text=f"Listener is currently active {models.env.title}!")
     else:
-        if state:
-            speaker.speak(text=f"Listener is currently active {models.env.title}!")
-        else:
-            speaker.speak(text=f"Listener is currently inactive {models.env.title}!")
+        speaker.speak(text=f"Listener is currently inactive {models.env.title}!")
 
 
 def get_listener_state() -> bool:

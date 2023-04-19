@@ -40,16 +40,15 @@ def alpha(text: str) -> bool:
         return False
     if res['@success'] == 'false':
         return False
-    else:
-        try:
-            response = next(res.results).text.splitlines()[0]
-            response = re.sub(r'(([0-9]+) \|)', '', response).replace(' |', ':').strip()
-            if response == '(no data available)':
-                return False
-            speaker.speak(text=response)
-            return True
-        except (StopIteration, AttributeError):
+    try:
+        response = next(res.results).text.splitlines()[0]
+        response = re.sub(r'(([0-9]+) \|)', '', response).replace(' |', ':').strip()
+        if response == '(no data available)':
             return False
+        speaker.speak(text=response)
+        return True
+    except (StopIteration, AttributeError):
+        return False
 
 
 def google_maps(query: str) -> bool:
@@ -69,7 +68,7 @@ def google_maps(query: str) -> bool:
 
     maps_url = "https://maps.googleapis.com/maps/api/place/textsearch/json?"
     try:
-        response = requests.get(maps_url + 'query=' + query + '&key=' + models.env.maps_api)
+        response = requests.get(f'{maps_url}query={query}&key={models.env.maps_api}')
     except EgressErrors as error:
         logger.error(error)
         return False
@@ -124,20 +123,19 @@ def google_maps(query: str) -> bool:
                            f"{miles} away. {next_val}", run=True)
         util.write_screen(text=f"{item['Name']} -- {item['Rating']} -- "
                                f"{''.join([j for j in item['Address'] if not j.isdigit()])}")
-        if converted := listener.listen():
-            if 'exit' in converted or 'quit' in converted or 'Xzibit' in converted:
-                break
-            elif word_match.word_match(phrase=converted.lower(), match_list=keywords.keywords.ok):
-                maps_url = f'https://www.google.com/maps/dir/{start}/{end}/'
-                webbrowser.open(url=maps_url)
-                speaker.speak(text=f"Directions on your screen {models.env.title}!")
-                return True
-            elif results == 1:
-                return True
-            elif n == results:
-                speaker.speak(text=f"I've run out of options {models.env.title}!")
-                return True
-            else:
-                continue
-        else:
+        if not (converted := listener.listen()):
             return True
+        if 'exit' in converted or 'quit' in converted or 'Xzibit' in converted:
+            break
+        elif word_match.word_match(phrase=converted.lower(), match_list=keywords.keywords.ok):
+            maps_url = f'https://www.google.com/maps/dir/{start}/{end}/'
+            webbrowser.open(url=maps_url)
+            speaker.speak(text=f"Directions on your screen {models.env.title}!")
+            return True
+        elif results == 1:
+            return True
+        elif n == results:
+            speaker.speak(text=f"I've run out of options {models.env.title}!")
+            return True
+        else:
+            continue

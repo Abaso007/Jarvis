@@ -200,9 +200,14 @@ class RokuECP:
         Args:
             app_name: Name of the application to launch.
         """
-        app_id = next((item for item in self.get_apps(raw=True)
-                       if item['name'].lower() == app_name.lower()), {}).get('id')
-        if app_id:
+        if app_id := next(
+            (
+                item
+                for item in self.get_apps(raw=True)
+                if item['name'].lower() == app_name.lower()
+            ),
+            {},
+        ).get('id'):
             response = self.make_call(path=f'/launch/{app_id}', method='POST')
             if not response.ok:
                 logger.error("%d: %s", response.status_code, response.text)
@@ -221,9 +226,8 @@ class RokuECP:
         """
         response = self.make_call(path='/query/apps', method='GET')
         xml_parsed = ElementTree.fromstring(response.content)
-        if raw:
-            for node in xml_parsed:
+        for node in xml_parsed:
+            if raw:
                 yield dict(id=node.get('id'), version=node.get('version'), name=node.text)
-        else:
-            for node in xml_parsed:
+            else:
                 yield node.text
